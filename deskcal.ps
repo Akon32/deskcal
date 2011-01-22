@@ -1,7 +1,7 @@
 %!PS-Adobe-1.0
 %%Title: deskcal.ps version 1.0 alpha.
-%%Creator: Andrew Rogers (adapted from Ole Arntzen's polyeder.ps)
-%%CreationDate: 6/1/93
+%%Creator: Alexander Konovalov (adapted from Andrew Rogers's deskcal.ps)
+%%CreationDate: 2010-01-22
 %%Pages: 1
 %%EndComments
 
@@ -9,12 +9,15 @@
 % A small program to create a dodecahedral desk calendar; adapted from
 % Ole Arntzen's (olea@ii.uib.no) generic polyhedron program, polyeder.ps,
 % by Andrew Rogers
+% (6/1/93)
 %
 % This program is public domain.
-%
+%----------------------------------------------------------------------
+% In 2011, deskcal.ps was adapted to Russian week style (Monday is first day
+% of week) by Alexander Konovalov <akon32@rambler.ru> 
 %----------------------------------------------------------------------
 
-/year 1994 def			% define desired year here
+/year 2011 def			% define desired year here
 
 /pos 0 def						% starting position
 /mon [1 8 2 7 6 11 5 12 10 4 9 3] def			% position -> month
@@ -22,10 +25,11 @@
 
 /name [() (January) (February) (March) (April) (May) (June) (July)
           (August) (September) (October) (November) (December)] def
-/wkday [(Su) (Mo) (Tu) (We) (Th) (Fr) (Sa)] def
+/wkday [(Mo) (Tu) (We) (Th) (Fr) (Sa) (Su)] def
 
 /LineLength 80 def  			% length of the edges
 /fsize LineLength 10 idiv def		% font size
+/linewidth { 0.75 setlinewidth } def 	% line width
 
 /center {		% str width center
 /width exch def
@@ -125,12 +129,14 @@ dup 3 -1 roll 4 -1 roll putinterval
 
 /DrawEdge
 {
+  linewidth
   0 0 moveto
   LineLength 0 lineto stroke
 } def
 
 /DrawFlip
 {
+  linewidth
   [1 4] 4 setdash
   0 0 moveto
   LineLength 0 lineto stroke
@@ -152,6 +158,7 @@ dup 3 -1 roll 4 -1 roll putinterval
 
 /DrawPolygon
 {
+  linewidth
   [1 4] 4 setdash
   0 0 moveto
   LineLength 0 lineto stroke
@@ -194,7 +201,7 @@ dup 3 -1 roll 4 -1 roll putinterval
 % calculate starting day of year; adjust month lengths for leap year
 
 /y1 year 1 sub def
-/start year y1 4 idiv add y1 100 idiv sub y1 400 idiv add 7 mod def
+/start year y1 4 idiv add y1 100 idiv sub y1 400 idiv add 6 add 7 mod def
 
 year 4 mod 0 eq year 100 mod 0 ne year 400 mod 0 eq or and {
   ndays 2 29 put
