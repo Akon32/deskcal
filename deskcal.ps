@@ -1,0 +1,222 @@
+%!PS-Adobe-1.0
+%%Title: deskcal.ps version 1.0 alpha.
+%%Creator: Andrew Rogers (adapted from Ole Arntzen's polyeder.ps)
+%%CreationDate: 6/1/93
+%%Pages: 1
+%%EndComments
+
+%----------------------------------------------------------------------
+% A small program to create a dodecahedral desk calendar; adapted from
+% Ole Arntzen's (olea@ii.uib.no) generic polyhedron program, polyeder.ps,
+% by Andrew Rogers
+%
+% This program is public domain.
+%
+%----------------------------------------------------------------------
+
+/year 1994 def			% define desired year here
+
+/pos 0 def						% starting position
+/mon [1 8 2 7 6 11 5 12 10 4 9 3] def			% position -> month
+/ndays [0 31 28 31 30 31 30 31 31 30 31 30 31] def	% month lengths
+
+/name [() (January) (February) (March) (April) (May) (June) (July)
+          (August) (September) (October) (November) (December)] def
+/wkday [(Su) (Mo) (Tu) (We) (Th) (Fr) (Sa)] def
+
+/LineLength 80 def  			% length of the edges
+/fsize LineLength 10 idiv def		% font size
+
+/center {		% str width center
+/width exch def
+/str exch def
+width str stringwidth pop sub 2 div 0 rmoveto str show
+} def
+
+/strcat {		% str1 str2 >> str1str2
+2 copy
+length exch length
+dup 3 -1 roll add
+string
+dup 0 6 -1 roll putinterval
+dup 3 -1 roll 4 -1 roll putinterval
+} def
+
+/printcal {
+  /m mon pos get def			% convert position to month
+
+  gsave
+  /Helvetica-Bold findfont fsize scalefont setfont
+
+  /Y LineLength 1.05 mul def
+  0 Y moveto
+  name m get (  ) strcat year 4 string cvs strcat LineLength center
+
+  /l ndays m get def 			% calculate length, starting offset
+  /s start def
+  1 1 m 1 sub {
+    /i exch def
+    /s s ndays i get add def
+  } for
+  /s s 7 mod def
+
+  % calculate centering information for weekdays/dates
+
+  /Helvetica-Bold findfont fsize 1 sub scalefont setfont
+  /w3 (222) stringwidth pop def
+  /w2 (22) stringwidth pop def
+  /X LineLength w3 6 mul w2 add sub 2 div def
+
+  /Helvetica-Bold findfont fsize 2 sub scalefont setfont
+  /Y Y fsize 1.5 mul sub def
+  0 1 6 {				% weekdays
+    /w exch def
+    X w w3 mul add Y moveto
+    wkday w get w2 center
+  } for
+
+  /Helvetica-Bold findfont fsize 1 sub scalefont setfont
+  /Y Y fsize sub def
+
+  1 1 l {				% dates
+    /d exch 3 string cvs def
+    X s 7 mod w3 mul add w2 add d stringwidth pop sub
+      Y s 7 idiv fsize mul sub moveto
+    d show
+    /s s 1 add def
+  } for
+  grestore
+  /pos pos 1 add def
+} def
+
+/ReadCharacter
+{
+% This routine looks for an interesting character, and return it on
+% the stack.  Illegal character => Quit.
+  /OneCharacter 1 string def
+  {
+    currentfile OneCharacter readstring % Read one character.
+    not { (Unexpected end of FILE.  Quit) print quit } if
+    OneCharacter (e) eq OneCharacter (f) eq or { exit } if
+    OneCharacter (3) ge OneCharacter (9) le and { exit } if
+    pop
+
+    OneCharacter (%) eq
+    {   % Found commentcharacter, drop rest of line.
+      {
+        currentfile OneCharacter readstring     % Read one character.
+        not { (Unexpected end of FILE.  Quit) print quit } if
+        pop
+        OneCharacter (\012) eq { exit } if
+      } loop
+    }
+    {
+      OneCharacter ( ) gt
+      {
+        % Illegal character => Quit.
+        (Illegal characeter: ") print
+        OneCharacter print
+        ("\012.  Quit) print
+        quit
+      } if
+    } ifelse
+  } loop
+} def
+
+/DrawEdge
+{
+  0 0 moveto
+  LineLength 0 lineto stroke
+} def
+
+/DrawFlip
+{
+  [1 4] 4 setdash
+  0 0 moveto
+  LineLength 0 lineto stroke
+  [] 0 setdash
+  0 0 moveto
+  LineLength 0.5 mul LineLength 0.3125 mul neg lineto
+  LineLength 0 lineto stroke
+} def
+
+/InnerLoop
+{
+  /OneCharacter ReadCharacter def   % Read one character.
+  OneCharacter (e) eq { DrawEdge }
+    { OneCharacter (f) eq { DrawFlip } { DrawPolygon } ifelse } ifelse
+
+  LineLength 0 translate
+  CurrentAngle rotate
+} def
+
+/DrawPolygon
+{
+  [1 4] 4 setdash
+  0 0 moveto
+  LineLength 0 lineto stroke
+  [] 0 setdash
+  CurrentAngle  % Put previous CurrentAngle on stack for later use.
+
+  /NumEdges OneCharacter cvi def
+  /CurrentAngle 360 NumEdges div def
+  180 CurrentAngle add rotate
+
+  NumEdges 1 sub {
+    InnerLoop
+  } repeat
+
+  printcal
+
+  LineLength 0 translate    % Transformer back to start.
+  180 rotate
+
+  /CurrentAngle exch def    % Fetch CurrentAngle from the stack.
+} def
+
+/DrawPolyhedron
+{
+
+  /OneCharacter ReadCharacter def   % Read one character.
+  /NumEdges OneCharacter cvi def
+  /CurrentAngle 360 NumEdges div def
+
+  printcal
+
+  NumEdges {
+    InnerLoop
+  } repeat
+
+} def
+
+0 setlinewidth      % Set line thickness.
+
+% calculate starting day of year; adjust month lengths for leap year
+
+/y1 year 1 sub def
+/start year y1 4 idiv add y1 100 idiv sub y1 400 idiv add 7 mod def
+
+year 4 mod 0 eq year 100 mod 0 ne year 400 mod 0 eq or and {
+  ndays 2 29 put
+} if
+
+% Draw pentagon dodecaheadron.
+
+gsave
+270 350 translate   % Translate to make the polyhedron fit the paper.
+DrawPolyhedron
+5                 % This is a comment.
+ 5 f 5fff    e ee % Blanks are ignored.
+ 5 f 5fff    e ee
+ 5 f 5fff    e ee
+ 5 f 5ff5eeeee ee
+ 5 f 5fff    e ee
+grestore
+
+% Print some instructions.
+
+/Helvetica findfont 12 scalefont setfont
+40 40 moveto
+(Cut along solid line; fold along dotted lines.) show
+
+showpage
